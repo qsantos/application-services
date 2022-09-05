@@ -100,16 +100,18 @@ lazy_static::lazy_static! {
             id INTEGER PRIMARY KEY,
             url TEXT,
             url_hash INTEGER NOT NULL,
-            title TEXT
+            title TEXT,
+            is_deleted TINYINT NOT NULL
         ) WITHOUT ROWID;";
 
    static ref FILL_STAGING: &'static str = "
-    INSERT OR IGNORE INTO temp.iOSHistoryStaging(id, url, url_hash, title)
+    INSERT OR IGNORE INTO temp.iOSHistoryStaging(id, url, url_hash, title, is_deleted)
         SELECT
             h.id,
             validate_url(h.url),
             hash(validate_url(h.url)),
-            sanitize_utf8(h.title)
+            sanitize_utf8(h.title),
+            h.is_deleted
         FROM ios.history h
         WHERE url IS NOT NULL"
    ;
@@ -127,7 +129,8 @@ lazy_static::lazy_static! {
             t.title,
             -1,
             1
-        FROM temp.iOSHistoryStaging t"
+        FROM temp.iOSHistoryStaging t
+        WHERE t.is_deleted = 0"
    ;
 
    // Insert history visits
@@ -136,11 +139,12 @@ lazy_static::lazy_static! {
         SELECT
             NULL, -- iOS does not store enough information to rebuild redirect chains.
             (SELECT p.id FROM main.moz_places p WHERE p.url_hash = t.url_hash AND p.url = t.url),
-            sanitize_timestamp(v.date),
+            sanitize_float_timestamp(v.date),
             v.type, -- iOS stores visit types that map 1:1 to ours.
             v.is_local
         FROM ios.visits v
-        LEFT JOIN temp.iOSHistoryStaging t on v.siteID = t.id"
+        LEFT JOIN temp.iOSHistoryStaging t on v.siteID = t.id
+        WHERE t.is_deleted = 0"
    ;
 
 
