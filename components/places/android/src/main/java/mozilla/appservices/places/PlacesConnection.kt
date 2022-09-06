@@ -105,20 +105,6 @@ class PlacesApi(path: String) : PlacesManager, AutoCloseable {
         return SyncTelemetryPing.fromJSONString(pingJSONString)
     }
 
-    override fun importBookmarksFromFennec(path: String): JSONObject {
-        val metrics = this.api.placesBookmarksImportFromFennec(path)
-        return JSONObject(metrics)
-    }
-
-    override fun importPinnedSitesFromFennec(path: String): List<BookmarkItem> {
-        return this.api.placesPinnedSitesImportFromFennec(path)
-    }
-
-    override fun importVisitsFromFennec(path: String): JSONObject {
-        val metrics = this.api.placesHistoryImportFromFennec(path)
-        return JSONObject(metrics)
-    }
-
     override fun resetHistorySyncMetadata() {
         this.api.resetHistory()
     }
@@ -538,41 +524,6 @@ interface PlacesManager {
      * you have all connections you intend using open before calling this.
      */
     fun syncBookmarks(syncInfo: SyncAuthInfo): SyncTelemetryPing
-
-    /**
-     * Imports bookmarks from a Fennec `browser.db` database.
-     *
-     * It has been designed exclusively for non-sync users.
-     *
-     * @param path Path to the `browser.db` file database.
-     * @return JSONObject with import metrics.
-     */
-    fun importBookmarksFromFennec(path: String): JSONObject
-
-    /**
-     * Imports visits from a Fennec `browser.db` database.
-     *
-     * It has been designed exclusively for non-sync users and should
-     * be called before bookmarks import.
-     *
-     * @param path Path to the `browser.db` file database.
-     * @return JSONObject with import metrics.
-     */
-    fun importVisitsFromFennec(path: String): JSONObject
-
-    /**
-     * Returns pinned sites from a Fennec `browser.db` bookmark database.
-     *
-     * Fennec used to store "pinned websites" as normal bookmarks
-     * under an invisible root.
-     * During import, this un-syncable root and its children are ignored,
-     * so we return the pinned websites separately as a list so
-     * Fenix can store them in a collection.
-     *
-     * @param path Path to the `browser.db` file database.
-     * @return A list of pinned websites.
-     */
-    fun importPinnedSitesFromFennec(path: String): List<BookmarkItem>
 
     /**
      * Resets all sync metadata for history, including change flags,

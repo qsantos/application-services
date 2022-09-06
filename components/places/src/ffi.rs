@@ -8,9 +8,6 @@ use crate::api::matcher::{self, search_frecent, SearchParams};
 use crate::api::places_api::places_api_new;
 use crate::error::PlacesError;
 use crate::import::common::HistoryMigrationResult;
-use crate::import::fennec::import_pinned_sites;
-use crate::import::import_fennec_bookmarks;
-use crate::import::import_fennec_history;
 use crate::import::import_ios_bookmarks;
 use crate::import::import_ios_history;
 use crate::storage;
@@ -209,24 +206,6 @@ impl PlacesApi {
             &root_sync_key,
         )?;
         Ok(serde_json::to_string(&ping).unwrap())
-    }
-
-    fn places_pinned_sites_import_from_fennec(&self, db_path: String) -> Result<Vec<BookmarkItem>> {
-        let sites = import_pinned_sites(self, db_path.as_str())?
-            .into_iter()
-            .map(BookmarkItem::from)
-            .collect();
-        Ok(sites)
-    }
-
-    fn places_history_import_from_fennec(&self, db_path: String) -> Result<String> {
-        let metrics = import_fennec_history(self, db_path.as_str())?;
-        Ok(serde_json::to_string(&metrics)?)
-    }
-
-    fn places_bookmarks_import_from_fennec(&self, db_path: String) -> Result<String> {
-        let metrics = import_fennec_bookmarks(self, db_path.as_str())?;
-        Ok(serde_json::to_string(&metrics)?)
     }
 
     fn places_bookmarks_import_from_ios(&self, db_path: String) -> Result<()> {

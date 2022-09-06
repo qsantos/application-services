@@ -33,3 +33,5 @@ Use the template below to make assigning a version number during the release cut
 ### What's new
   - Exposed a function in Swift `migrateHistoryFromBrowserDb` to migrate history from `browser.db` to `places.db`, the function will migrate all the local visits in one go. ([#5077](https://github.com/mozilla/application-services/pull/5077)).
     - The migration might take some time if a user had a lot of history, so make sure it is **not** run on a thread that shouldn't wait.
+### ⚠️ Breaking Changes ⚠️
+  - Removed the Fennec migration logic for android.
