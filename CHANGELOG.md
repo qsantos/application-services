@@ -7,6 +7,7 @@
 ### What's Changed
   - Disabled Glean events recorded when the SDK is not ready for a feature ([#5185](https://github.com/mozilla/application-services/pull/5185))
 
+
 # v94.2.1 (_2022-09-21_)
 
 [Full Changelog](https://github.com/mozilla/application-services/compare/v94.2.0...v94.2.1)
