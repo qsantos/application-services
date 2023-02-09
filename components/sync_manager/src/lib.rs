@@ -10,6 +10,10 @@ pub mod manager;
 mod types;
 
 pub use error::{Result, SyncManagerError};
+pub use sync15::engine::SyncEngineId;
+pub use sync15::telemetry::{
+    EngineIncoming, EngineOutgoing, FailureReasonLabel, SyncTelemetryManager,
+};
 use sync15::DeviceType;
 pub use types::*;
 

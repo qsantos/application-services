@@ -5,9 +5,9 @@
 //! Manage recording sync telemetry. Assumes some external telemetry
 //! library/code which manages submitting.
 
-use crate::error::Error;
 #[cfg(feature = "sync-client")]
 use crate::error::ErrorResponse;
+use crate::{engine::SyncEngineId, error::Error};
 
 use std::collections::HashMap;
 use std::time;
@@ -87,6 +87,49 @@ impl Serialize for Stopwatch {
             Stopwatch::Finished(c) => c.serialize(serializer),
         }
     }
+}
+
+pub enum FailureReasonLabel {
+    Other,
+    Unexpected,
+    Auth,
+}
+
+/// A trait that allows submitting Sync telemetry
+/// this trait will be implemented by the foreign language consumer
+/// and consumed by the Sync Manager
+///
+/// for example, Kotlin will define a class that translates between each of the
+/// Rust calls into Glean Parser generated Kotlin code that submits telemetry
+pub trait SyncTelemetryManager: Sync + Send {
+    /// Submits the Global Sync ping
+    fn submit_sync_ping(&self);
+
+    /// Records when the engine sync started
+    fn record_start_time(&self, engine: SyncEngineId, started_at: u64);
+
+    /// Records when the engine sync ended
+    fn record_end_time(&self, engine_name: SyncEngineId, ended_at: u64);
+
+    /// Records the incoming engine record counts
+    fn record_incoming_records(&self, engine_name: SyncEngineId, incoming_records: EngineIncoming);
+
+    /// Records the outgoing engine record counts
+    fn record_outgoing_records(&self, engine_name: SyncEngineId, outgoing_records: EngineOutgoing);
+
+    /// Records the number of outgoing batches needed to upload all outgoing records
+    fn record_outgoing_batches(&self, engine_name: SyncEngineId, batches: u64);
+
+    /// Records the failure reasons for the engine
+    fn record_failure_reason(
+        &self,
+        engine_name: SyncEngineId,
+        label: FailureReasonLabel,
+        reason: String,
+    );
+
+    /// Submits the ping for a given sync engine
+    fn submit_sync_engine_ping(&self, engine_name: SyncEngineId);
 }
 
 #[cfg(test)]
@@ -283,20 +326,20 @@ mod test {
 }
 
 /// Incoming record for an engine's sync
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Serialize, Clone, Copy)]
 pub struct EngineIncoming {
     #[serde(skip_serializing_if = "crate::skip_if_default")]
-    applied: u32,
+    pub applied: u32,
 
     #[serde(skip_serializing_if = "crate::skip_if_default")]
-    failed: u32,
+    pub failed: u32,
 
     #[serde(rename = "newFailed")]
     #[serde(skip_serializing_if = "crate::skip_if_default")]
-    new_failed: u32,
+    pub new_failed: u32,
 
     #[serde(skip_serializing_if = "crate::skip_if_default")]
-    reconciled: u32,
+    pub reconciled: u32,
 }
 
 impl EngineIncoming {
@@ -364,13 +407,13 @@ impl EngineIncoming {
 }
 
 /// Outgoing record for an engine's sync
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Serialize, Copy, Clone)]
 pub struct EngineOutgoing {
     #[serde(skip_serializing_if = "crate::skip_if_default")]
-    sent: usize,
+    pub sent: u32,
 
     #[serde(skip_serializing_if = "crate::skip_if_default")]
-    failed: usize,
+    pub failed: u32,
 }
 
 impl EngineOutgoing {
@@ -382,12 +425,12 @@ impl EngineOutgoing {
 
     #[inline]
     pub fn sent(&mut self, n: usize) {
-        self.sent += n;
+        self.sent += n as u32;
     }
 
     #[inline]
     pub fn failed(&mut self, n: usize) {
-        self.failed += n;
+        self.failed += n as u32;
     }
 }
 
@@ -456,6 +499,41 @@ impl Engine {
 
     fn finished(&mut self) {
         self.when_took = self.when_took.finished();
+    }
+
+    fn submit(&self, telemetry_manager: &dyn SyncTelemetryManager) {
+        let engine_id = match SyncEngineId::try_from(self.name.as_str()) {
+            Ok(engine_id) => engine_id,
+            Err(_) => return,
+        };
+        if let Stopwatch::Finished(WhenTook { when, took }) = &self.when_took {
+            let started_at = (when.round() as u64) - (took / 1000);
+            telemetry_manager.record_start_time(engine_id, started_at);
+            telemetry_manager.record_end_time(engine_id, when.round() as u64);
+        }
+        if let Some(incoming) = &self.incoming {
+            telemetry_manager.record_incoming_records(engine_id, *incoming);
+        }
+        for outgoing in &self.outgoing {
+            telemetry_manager.record_outgoing_records(engine_id, *outgoing)
+        }
+
+        telemetry_manager.record_outgoing_batches(engine_id, self.outgoing.len() as u64);
+        if let Some(failure) = &self.failure {
+            let (label, reason) = match failure {
+                SyncFailure::Auth { from } => (FailureReasonLabel::Auth, from.to_string()),
+                SyncFailure::Http { code } => {
+                    (FailureReasonLabel::Other, format!("http error {code}"))
+                }
+                SyncFailure::Other { error } => (FailureReasonLabel::Other, error.clone()),
+                SyncFailure::Shutdown => (FailureReasonLabel::Other, "shutdown".to_string()),
+                SyncFailure::Unexpected { error } => {
+                    (FailureReasonLabel::Unexpected, error.to_string())
+                }
+            };
+            telemetry_manager.record_failure_reason(engine_id, label, reason)
+        }
+        telemetry_manager.submit_sync_engine_ping(engine_id)
     }
 }
 
@@ -608,6 +686,12 @@ impl SyncTelemetry {
     pub fn finished(&mut self) {
         self.when_took = self.when_took.finished();
     }
+
+    pub fn submit(&self, telemetry_manager: &dyn SyncTelemetryManager) {
+        self.engines
+            .iter()
+            .for_each(|engine| engine.submit(telemetry_manager));
+    }
 }
 
 #[cfg(test)]
@@ -743,6 +827,13 @@ impl SyncTelemetryPing {
 
     pub fn event(&mut self, e: Event) {
         self.events.push(e);
+    }
+
+    pub fn submit(&self, telemetry_manager: &dyn SyncTelemetryManager) {
+        self.syncs
+            .iter()
+            .for_each(|sync| sync.submit(telemetry_manager));
+        telemetry_manager.submit_sync_ping();
     }
 }
 

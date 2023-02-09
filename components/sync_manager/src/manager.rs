@@ -9,6 +9,7 @@ use error_support::breadcrumb;
 use parking_lot::Mutex;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryFrom;
+use std::sync::Arc;
 use std::time::SystemTime;
 use sync15::client::{
     sync_multiple_with_command_processor, MemoryCachedState, Sync15StorageClientInit,
@@ -16,10 +17,12 @@ use sync15::client::{
 };
 use sync15::clients_engine::{Command, CommandProcessor, CommandStatus, Settings};
 use sync15::engine::{EngineSyncAssociation, SyncEngine, SyncEngineId};
+use sync15::SyncTelemetryManager;
 
 #[derive(Default)]
 pub struct SyncManager {
     mem_cached_state: Mutex<Option<MemoryCachedState>>,
+    telemetry_manager: Mutex<Option<Arc<dyn SyncTelemetryManager>>>,
 }
 
 impl SyncManager {
@@ -123,7 +126,7 @@ impl SyncManager {
         let mut mem_cached_state = state.take().unwrap_or_default();
         let mut disk_cached_state = params.persisted_state.take();
 
-        // tell engines about the local encryption key.
+        // Register the telemetry manager and tell engines about the local encryption key.
         for engine in engines.iter_mut() {
             if let Some(key) = params.local_encryption_keys.get(&*engine.collection_name()) {
                 engine.set_local_encryption_key(key)?
@@ -181,8 +184,11 @@ impl SyncManager {
                 }
             }
         }
-        let telemetry_json = serde_json::to_string(&result.telemetry).unwrap();
 
+        if let Some(telemetry_manager) = self.telemetry_manager.lock().as_ref() {
+            result.telemetry.submit(telemetry_manager.as_ref())
+        }
+        let telemetry_json = serde_json::to_string(&result.telemetry).unwrap();
         Ok(SyncResult {
             status,
             successful,
@@ -235,6 +241,10 @@ impl SyncManager {
             engine_map.retain(|engine_id, _| selected_engine_ids.contains(engine_id))
         }
         Ok(engine_map.into_values().collect())
+    }
+
+    pub fn register_telemetry_manager(&self, telemetry_manager: Box<dyn SyncTelemetryManager>) {
+        *self.telemetry_manager.lock() = Some(Arc::from(telemetry_manager))
     }
 }
 

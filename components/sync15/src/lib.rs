@@ -26,6 +26,7 @@ mod key_bundle;
 mod record_types;
 mod server_timestamp;
 pub mod telemetry;
+pub use telemetry::SyncTelemetryManager;
 
 pub use crate::client_types::{ClientData, RemoteClient};
 pub use crate::device_type::DeviceType;

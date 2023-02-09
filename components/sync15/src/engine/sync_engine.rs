@@ -29,7 +29,7 @@ pub enum EngineSyncAssociation {
 }
 
 /// The concrete `SyncEngine` implementations
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SyncEngineId {
     // Note that we've derived PartialOrd etc, which uses lexicographic ordering
     // of the variants. We leverage that such that the higher priority engines

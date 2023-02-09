@@ -186,7 +186,7 @@ impl TabsSyncImpl {
                 client_name,
                 device_type,
                 last_modified: 0, // ignored for outgoing records.
-                remote_tabs: local_tabs.to_vec(),
+                remote_tabs: local_tabs,
             };
             log::trace!("outgoing {:?}", local_record);
             let envelope = OutgoingEnvelope {

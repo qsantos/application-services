@@ -42,6 +42,22 @@ dictionary SyncParams {
     DeviceSettings device_settings;
 };
 
+dictionary EngineIncoming {
+    u32 applied;
+    u32 failed;
+    u32 new_failed;
+    u32 reconciled;
+};
+
+dictionary EngineOutgoing {
+    u32 sent;
+    u32 failed;
+};
+
+enum FailureReasonLabel {
+    "Other", "Unexpected", "Auth",
+};
+
 [Enum]
 interface SyncEngineSelection {
     All();
@@ -76,6 +92,15 @@ enum DeviceType {
     "VR",
     "TV",
     "Unknown",
+};
+
+enum SyncEngineId {
+    "Passwords",
+    "Tabs",
+    "Bookmarks",
+    "Addresses",
+    "CreditCards",
+    "History",
 };
 
 dictionary SyncResult {
@@ -122,4 +147,34 @@ interface SyncManager {
 
     // Get a list of engine names available for syncing
     sequence<string> get_available_engines();
+
+    void register_telemetry_manager(SyncTelemetryManager telemetry_manager);
+};
+
+// A callback interface to manage the setting of sync metrics
+// and the submission of the sync telemetry.
+callback interface SyncTelemetryManager {
+    /// Submits the Global Sync ping
+    void submit_sync_ping();
+
+    /// Records when the engine sync started
+    void record_start_time(SyncEngineId engine, u64 started_at);
+
+    /// Records when the engine sync ended
+    void record_end_time(SyncEngineId engine, u64 ended_at);
+
+    /// Records the incoming engine record counts
+    void record_incoming_records(SyncEngineId engine, EngineIncoming incoming_records);
+
+    /// Records the outgoing engine record counts
+    void record_outgoing_records(SyncEngineId engine, EngineOutgoing outgoing_records);
+
+    /// Records the number of outgoing batches needed to upload all outgoing records
+    void record_outgoing_batches(SyncEngineId engine, u64 batches);
+
+    /// Records the failure reasons for the engine
+    void record_failure_reason(SyncEngineId engine, FailureReasonLabel label, string reason);
+
+    /// Submits the ping for a given sync engine
+    void submit_sync_engine_ping(SyncEngineId engine);
 };
