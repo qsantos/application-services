@@ -5,9 +5,10 @@
 //! Manage recording sync telemetry. Assumes some external telemetry
 //! library/code which manages submitting.
 
+use crate::error::Error;
+
 #[cfg(feature = "sync-client")]
-use crate::error::ErrorResponse;
-use crate::{engine::SyncEngineId, error::Error};
+use crate::{engine::SyncEngineId, error::ErrorResponse};
 
 use std::collections::HashMap;
 use std::time;
@@ -101,6 +102,7 @@ pub enum FailureReasonLabel {
 ///
 /// for example, Kotlin will define a class that translates between each of the
 /// Rust calls into Glean Parser generated Kotlin code that submits telemetry
+#[cfg(feature = "sync-client")]
 pub trait SyncTelemetryManager: Sync + Send {
     /// Submits the Global Sync ping
     fn submit_sync_ping(&self);
@@ -501,6 +503,7 @@ impl Engine {
         self.when_took = self.when_took.finished();
     }
 
+    #[cfg(feature = "sync-engine")]
     fn submit(&self, telemetry_manager: &dyn SyncTelemetryManager) {
         let engine_id = match SyncEngineId::try_from(self.name.as_str()) {
             Ok(engine_id) => engine_id,
@@ -687,6 +690,7 @@ impl SyncTelemetry {
         self.when_took = self.when_took.finished();
     }
 
+    #[cfg(feature = "sync-engine")]
     pub fn submit(&self, telemetry_manager: &dyn SyncTelemetryManager) {
         self.engines
             .iter()
@@ -829,6 +833,7 @@ impl SyncTelemetryPing {
         self.events.push(e);
     }
 
+    #[cfg(feature = "sync-engine")]
     pub fn submit(&self, telemetry_manager: &dyn SyncTelemetryManager) {
         self.syncs
             .iter()

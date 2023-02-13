@@ -26,6 +26,8 @@ mod key_bundle;
 mod record_types;
 mod server_timestamp;
 pub mod telemetry;
+
+#[cfg(feature = "sync-engine")]
 pub use telemetry::SyncTelemetryManager;
 
 pub use crate::client_types::{ClientData, RemoteClient};
