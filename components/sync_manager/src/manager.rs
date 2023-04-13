@@ -39,6 +39,7 @@ impl SyncManager {
             SyncEngineId::CreditCards => autofill::get_registered_sync_engine(engine_id),
             SyncEngineId::Passwords => logins::get_registered_sync_engine(engine_id),
             SyncEngineId::Tabs => tabs::get_registered_sync_engine(engine_id),
+            SyncEngineId::Nimbus => nimbus::get_registered_sync_engine(engine_id),
         }
     }
 

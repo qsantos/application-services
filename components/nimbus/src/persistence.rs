@@ -25,7 +25,7 @@ use std::path::Path;
 // ⚠️ Warning : Altering the type of `DB_VERSION` would itself require a DB migration. ⚠️
 pub(crate) const DB_KEY_DB_VERSION: &str = "db_version";
 pub(crate) const DB_VERSION: u16 = 2;
-const RKV_MAX_DBS: u32 = 6;
+const RKV_MAX_DBS: u32 = 1000;
 
 // Inspired by Glean - use a feature to choose between the backends.
 // Select the LMDB-powered storage backend when the feature is not activated.
@@ -138,6 +138,8 @@ pub enum StoreId {
     /// [`MultiIntervalCounter`] struct that contains a set of configurations and data
     /// for the different time periods that the data will be aggregated on.
     EventCounts,
+
+    RemoteEnrollments,
 }
 
 /// A wrapper for an Rkv store. Implemented to allow any value which supports
@@ -257,6 +259,7 @@ pub struct Database {
     enrollment_store: SingleStore,
     updates_store: SingleStore,
     event_count_store: SingleStore,
+    remote_enrollment_store: SingleStore,
 }
 
 impl Database {
@@ -265,12 +268,17 @@ impl Database {
     /// # Arguments
     /// - `path`: A path to the persisted data, this is provided by the consuming application
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
+        log::debug!("[NSYNC] newing DB");
         let rkv = Self::open_rkv(path)?;
         let meta_store = rkv.open_single("meta", StoreOptions::create())?;
         let experiment_store = rkv.open_single("experiments", StoreOptions::create())?;
         let enrollment_store = rkv.open_single("enrollments", StoreOptions::create())?;
         let updates_store = rkv.open_single("updates", StoreOptions::create())?;
         let event_count_store = rkv.open_single("event_counts", StoreOptions::create())?;
+        let remote_enrollment_store = rkv.open_single("remote_enrollments", StoreOptions::create())?;
+
+        // let remote_experiment_store = rkv.open_single("remote_experiments", StoreOptions::create())?;
+        // let remote_enrollments_store
         let db = Self {
             rkv,
             meta_store: SingleStore::new(meta_store),
@@ -278,6 +286,7 @@ impl Database {
             enrollment_store: SingleStore::new(enrollment_store),
             updates_store: SingleStore::new(updates_store),
             event_count_store: SingleStore::new(event_count_store),
+            remote_enrollment_store: SingleStore::new(remote_enrollment_store),
         };
         db.maybe_upgrade()?;
         Ok(db)
@@ -441,10 +450,12 @@ impl Database {
             StoreId::Enrollments => &self.enrollment_store,
             StoreId::Updates => &self.updates_store,
             StoreId::EventCounts => &self.event_count_store,
+            StoreId::RemoteEnrollments => &self.remote_enrollment_store,
         }
     }
 
     pub fn open_rkv<P: AsRef<Path>>(path: P) -> Result<Rkv> {
+        log::debug!("[NSYNC] open rkv");
         let path = std::path::Path::new(path.as_ref()).join("db");
         log::debug!("open_rkv: path =  {:?}", path.display());
         fs::create_dir_all(&path)?;

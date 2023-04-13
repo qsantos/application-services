@@ -34,6 +34,7 @@ const DEFAULT_ENGINES: &[(&str, usize)] = &[
     ("history", 1),
     ("prefs", 2),
     ("tabs", 1),
+    ("nimbus", 1)
 ];
 
 // Declined engines to include in a fresh `meta/global` record.

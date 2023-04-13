@@ -87,12 +87,12 @@ tasks.register("checkMavenArtifacts") {
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = rootProject.ext.build.jvmTargetCompatibility
+//        jvmTarget = rootProject.ext..jvmTargetCompatibility
     }
 }
 compileTestKotlin {
     kotlinOptions {
-        jvmTarget = rootProject.ext.build.jvmTargetCompatibility
+//        jvmTarget = rootProject.ext.build.jvmTargetCompatibility
     }
 }
 

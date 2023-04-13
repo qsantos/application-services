@@ -212,6 +212,9 @@ interface NimbusClient {
 
     [Throws=NimbusError]
     void clear_events();
+
+    [Throws=NimbusError]
+    void register_with_sync_manager();
 };
 
 [Custom]

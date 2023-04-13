@@ -19,6 +19,9 @@ pub mod persistence;
 mod sampling;
 mod strings;
 mod updating;
+// #[cfg(feature = "sync")]
+mod sync;
+pub use sync::get_registered_sync_engine;
 pub mod versioning;
 #[cfg(debug_assertions)]
 pub use evaluator::evaluate_enrollment;
@@ -79,7 +82,7 @@ pub struct NimbusClient {
     settings_client: Mutex<Box<dyn SettingsClient + Send>>,
     mutable_state: Mutex<InternalMutableState>,
     app_context: AppContext,
-    db: OnceCell<Database>,
+    db: OnceCell<Arc<Database>>,
     // Manages an in-memory cache so that we can answer certain requests
     // without doing (or waiting for) IO.
     database_cache: DatabaseCache,
@@ -342,6 +345,7 @@ impl NimbusClient {
     pub fn apply_pending_experiments(&self) -> Result<Vec<EnrollmentChangeEvent>> {
         log::info!("updating experiment list");
         let db = self.db()?;
+        log::debug!("NSYNC: done getting db");
         let mut writer = db.write()?;
 
         // We'll get the pending experiments which were stored for us, either by fetch_experiments
@@ -460,9 +464,13 @@ impl NimbusClient {
     pub fn set_experiments_locally(&self, experiments_json: String) -> Result<()> {
         let new_experiments = parse_experiments(&experiments_json)?;
         let db = self.db()?;
+        log::debug!("[NSYNC] Got DB!");
         let mut writer = db.write()?;
+        log::debug!("[NSYNC] Got writer!");
         write_pending_experiments(db, &mut writer, new_experiments)?;
+        log::debug!("[NSYNC] write experiments!");
         writer.commit()?;
+        log::debug!("[NSYNC] comitted!");
         Ok(())
     }
 
@@ -539,8 +547,9 @@ impl NimbusClient {
         Ok(())
     }
 
-    fn db(&self) -> Result<&Database> {
-        self.db.get_or_try_init(|| Database::new(&self.db_path))
+    fn db(&self) -> Result<&Arc<Database>> {
+        log::debug!("NSYNC: Initing db");
+        self.db.get_or_try_init(|| Ok(Arc::new(Database::new(&self.db_path)?)))
     }
 
     fn merge_additional_context(&self, context: Option<JsonObject>) -> Result<Value> {
@@ -611,9 +620,14 @@ impl NimbusClient {
     pub fn event_store(&self) -> Arc<Mutex<EventStore>> {
         self.event_store.clone()
     }
+
+    pub fn register_with_sync_manager(&self) -> Result<()> {
+        sync::register_with_sync_manager(Arc::clone(self.db()?));
+        Ok(())
+    }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct EnrolledExperiment {
     pub feature_ids: Vec<String>,
     pub slug: String,

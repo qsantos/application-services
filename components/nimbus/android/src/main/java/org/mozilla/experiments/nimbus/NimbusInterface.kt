@@ -24,7 +24,7 @@ typealias EnrolledExperiment = EnrolledExperiment
 /**
  * This is the main experiments API, which is exposed through the global [Nimbus] object.
  */
-interface NimbusInterface : FeaturesInterface, GleanPlumbInterface, NimbusEventStore {
+interface NimbusInterface : FeaturesInterface, GleanPlumbInterface, NimbusEventStore, SyncInterface {
 
     /**
      * Get the list of currently enrolled experiments
@@ -184,6 +184,8 @@ interface NimbusInterface : FeaturesInterface, GleanPlumbInterface, NimbusEventS
      *     event.
      */
     override fun recordExposureEvent(featureId: String) = Unit
+
+    override fun registerWithSyncManager() = Unit
 
     /**
      * Control the opt out for all experiments at once. This is likely a user action.

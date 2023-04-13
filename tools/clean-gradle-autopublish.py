@@ -39,10 +39,10 @@ def check_rust_targets(appservices_path):
     config.read_file(f)
     rust_targets = config['main'].get('rust.targets')
     if rust_targets is not None:
-        if "linux-x86-64" not in rust_targets.split(','):
-            print("rust.targets set in local.properties, but linux-x86-64 is not included.")
-            print("This will cause builds to fail, please fix this before running clean-gradle-autopublish.py")
-            sys.exit(1)
+        # if "linux-x86-64" not in rust_targets.split(','):
+        #     print("rust.targets set in local.properties, but linux-x86-64 is not included.")
+        #     print("This will cause builds to fail, please fix this before running clean-gradle-autopublish.py")
+        #     sys.exit(1)
         print(f"rust targets set to: {rust_targets}")
         print("Note: this means that only APKs for those targets will work")
         input("\nPress enter to continue")

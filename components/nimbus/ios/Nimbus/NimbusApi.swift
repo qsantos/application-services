@@ -17,9 +17,13 @@ import Glean
 ///
 public protocol NimbusInterface: FeaturesInterface, NimbusStartup,
     NimbusUserConfiguration, NimbusBranchInterface, GleanPlumbProtocol,
-    NimbusEventStore, NimbusQueues {}
+    NimbusEventStore, NimbusQueues, SyncInterface {}
 
 public typealias NimbusApi = NimbusInterface
+
+public protocol SyncInterface {
+    func registerWithSyncManager()
+}
 
 public protocol NimbusBranchInterface {
     /// Get the currently enrolled branch for the given experiment

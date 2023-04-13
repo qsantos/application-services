@@ -369,6 +369,14 @@ extension Nimbus: NimbusStartup {
     }
 }
 
+extension Nimbus: SyncInterface {
+    public func registerWithSyncManager() {
+        catchAll {
+            try nimbusClient.registerWithSyncManager()
+        }
+    }
+}
+
 extension Nimbus: NimbusBranchInterface {
     public func getExperimentBranch(experimentId: String) -> String? {
         return catchAll {
@@ -404,6 +412,10 @@ extension Nimbus: GleanPlumbProtocol {
 }
 
 public class NimbusDisabled: NimbusApi {
+    public func registerWithSyncManager() {
+        return // stub
+    }
+    
     public static let shared = NimbusDisabled()
 
     public var globalUserParticipation: Bool = false

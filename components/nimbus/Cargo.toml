@@ -16,7 +16,7 @@ name = "nimbus"
 default=["rkv-safe-mode", "uniffi-bindings"]
 rkv-safe-mode = []
 uniffi-bindings = ["uniffi"]
-
+# sync = ["sync15"]
 [dependencies]
 anyhow = "1"
 serde = "1"
@@ -36,6 +36,12 @@ chrono = { version = "0.4", features = ["serde"]}
 unicode-segmentation = "1.8.0"
 error-support = { path = "../support/error" }
 rs_client = { path = "../support/rs_client" }
+sync15 = { path = "../sync15" }
+lazy_static = "1.4"
+parking_lot = "0.12"
+sync-guid = { path = "../support/guid", features = ["random"] }
+
+
 
 [build-dependencies]
 uniffi = { version = "0.23", features = ["build"], optional = true }

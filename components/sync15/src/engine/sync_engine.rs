@@ -41,6 +41,7 @@ pub enum SyncEngineId {
     Addresses,
     CreditCards,
     History,
+    Nimbus,
 }
 
 impl SyncEngineId {
@@ -55,6 +56,7 @@ impl SyncEngineId {
             Self::Addresses,
             Self::CreditCards,
             Self::History,
+            Self::Nimbus,
         ]
         .into_iter()
     }
@@ -68,6 +70,7 @@ impl SyncEngineId {
             Self::Tabs => "tabs",
             Self::Addresses => "addresses",
             Self::CreditCards => "creditcards",
+            Self::Nimbus => "nimbus"
         }
     }
 }
@@ -89,6 +92,7 @@ impl TryFrom<&str> for SyncEngineId {
             "tabs" => Ok(Self::Tabs),
             "addresses" => Ok(Self::Addresses),
             "creditcards" => Ok(Self::CreditCards),
+            "nimbus" => Ok(Self::Nimbus),
             _ => Err(value.into()),
         }
     }

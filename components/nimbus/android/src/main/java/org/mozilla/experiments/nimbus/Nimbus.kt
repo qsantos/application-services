@@ -126,6 +126,10 @@ open class Nimbus(
         nimbusClient.getActiveExperiments()
     } ?: emptyList()
 
+    override fun registerWithSyncManager() {
+        nimbusClient.registerWithSyncManager()
+    }
+
     @WorkerThread
     override fun getAvailableExperiments(): List<AvailableExperiment> = withCatchAll("getAvailableExperiments") {
         nimbusClient.getAvailableExperiments()

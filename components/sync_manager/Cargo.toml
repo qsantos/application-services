@@ -12,6 +12,7 @@ sync15 = { path = "../sync15", features = ["sync-client"] }
 places = { path = "../places" }
 logins = { path = "../logins" }
 tabs = { path = "../tabs", features = ["full-sync"] }
+nimbus-sdk = { path = "../nimbus" }
 thiserror = "1.0"
 anyhow = "1.0"
 lazy_static = "1.4"
