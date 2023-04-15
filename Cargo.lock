@@ -3545,6 +3545,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "interrupt-support",
+ "once_cell",
  "remote_settings",
  "rusqlite",
  "serde",
