@@ -24,6 +24,7 @@ pub use rust_log_forwarder;
 pub use sync_manager;
 pub use tabs;
 pub use viaduct;
+pub use suggest;
 
 /// In order to support the use case of consumers who don't know about megazords
 /// and don't need our e.g. networking or logging, we consider initialization
