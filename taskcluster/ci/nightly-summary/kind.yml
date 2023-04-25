@@ -20,7 +20,7 @@ transforms:
 tasks:
   deps_complete:
     attributes:
-      nightly: nightly-only
+      release: release-only
     label: "Nightly build summary task"
     description: "Summary task for the nightly build that reports failures."
     alerts:

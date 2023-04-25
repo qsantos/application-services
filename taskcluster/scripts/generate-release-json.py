@@ -26,7 +26,7 @@ def dump_json(args):
         json.dump(data, f)
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Publish information about the nightly build')
+    parser = argparse.ArgumentParser(description='Publish information about the release builds')
     parser.add_argument('path')
     parser.add_argument('--version', help='version string', required=True)
     parser.add_argument('--maven-channel', help='channel the maven packages were uploaded to', required=True)

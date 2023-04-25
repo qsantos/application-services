@@ -17,14 +17,14 @@ kind-dependencies:
   - nightly-summary
 
 transforms:
-  - app_services_taskgraph.transforms.nightly_publish:transforms
+  - app_services_taskgraph.transforms.release_publish:transforms
   - taskgraph.transforms.job:transforms
   - taskgraph.transforms.task:transforms
 
 tasks:
-  nightly_publish:
+  release_publish:
     attributes:
-      nightly: nightly-only
+      release: release-only
     label: "Nightly build publish task"
     description: "Publish nightly artifacts"
     worker-type: b-linux
@@ -33,9 +33,5 @@ tasks:
       docker-image: { in-tree: linux }
       max-run-time: 1800
       env: {}
-      artifacts:
-        - name: "public/build/nightly.json"
-          path: "/builds/worker/checkouts/vcs/build/nightly.json"
-          type: "file"
     run:
         using: run-commands

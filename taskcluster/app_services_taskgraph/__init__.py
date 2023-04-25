@@ -10,7 +10,6 @@ import re
 
 from taskgraph.parameters import extend_parameters_schema
 from . import branch_builds
-from . import nightly_builds
 from .build_config import get_version
 
 PREVIEW_RE = re.compile(r'\[preview ([\w-]+)\]')
@@ -61,7 +60,7 @@ def get_decision_parameters(graph_config, parameters):
         if preview_match is not None:
             if preview_match.group(1) == 'nightly':
                 parameters["preview-build"] = "nightly"
-                parameters["target_tasks_method"] = "preview"
+                parameters["target_tasks_method"] = "release"
             else:
                 raise NotImplemented("Only nightly preview builds are currently supported")
         elif "[ci full]" in pr_title:
@@ -70,6 +69,10 @@ def get_decision_parameters(graph_config, parameters):
             parameters["target_tasks_method"] = "pr-skip"
         else:
             parameters["target_tasks_method"] = "pr-normal"
+    elif parameters["tasks_for"] == "github-push":
+        if parameters["head_tag"].startswith("release-"):
+            parameters["target_tasks_method"] = "release"
+            parameters["release"] = "release"
     elif parameters["tasks_for"] == "cron":
         # We don't have a great way of determining if something is a nightly or
         # not.  But for now, we can assume all cron-based builds are nightlies.
@@ -78,5 +81,4 @@ def get_decision_parameters(graph_config, parameters):
     parameters['branch-build'] = branch_builds.calc_branch_build_param(parameters)
     parameters['filters'].extend([
         'branch-build',
-        'nightly-build',
     ])
