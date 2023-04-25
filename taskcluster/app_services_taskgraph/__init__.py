@@ -70,7 +70,8 @@ def get_decision_parameters(graph_config, parameters):
         else:
             parameters["target_tasks_method"] = "pr-normal"
     elif parameters["tasks_for"] == "github-push":
-        if parameters["head_tag"].startswith("release-"):
+        if (parameters["head_tag"].startswith("release-")
+            or parameters["head_tag"] == "new-release-process"):
             parameters["target_tasks_method"] = "release"
             parameters["release"] = "release"
     elif parameters["tasks_for"] == "cron":
