@@ -39,6 +39,7 @@ pub struct RemoteSuggestion {
     pub click_url: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct Suggestion {
     pub block_id: String,
     pub advertiser: String,
