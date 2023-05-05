@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["GITHUB_USER_CONTENT_DOTCOM",""]],"enum":[["FilePath","A small enum for working with URLs and relative files"]],"fn":[["is_dir",""]],"static":[["USER_AGENT",""]],"struct":[["FileLoader","Utility class to abstract away the differences between loading from file and network."]]};

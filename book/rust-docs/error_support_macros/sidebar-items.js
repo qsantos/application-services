@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"attr":[["handle_error","A procedural macro that exposes internal errors to external errors the consuming applications should handle. It requires that the internal error implements [`error_support::ErrorHandling`]."]]};
