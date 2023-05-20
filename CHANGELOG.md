@@ -13,6 +13,7 @@
 
 ### ✨ What's New ✨
 
+- Added a new Remote Settings client component ([#5423](https://github.com/mozilla/application-services/pull/5423))
 - Added `toJSONObject()` and `getFeatures(featureId)` for Kotlin. This serializes the FML into a `JSONObject`. ([#5574](https://github.com/mozilla/application-services/pull/5574)).
 
 [Full Changelog](In progress)
